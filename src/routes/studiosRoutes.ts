@@ -4,11 +4,38 @@ import { knex } from '../database'
 import { randomUUID } from 'node:crypto'
 
 export async function studioRoutes(app: FastifyInstance) {
-  app.get('/', async () => {
-    const studios = await knex('studios').select()
+  // app.get('/', async () => {
+  //   // const studios = await knex('studios').select()
 
-    return { studios }
-  })
+  //   // return { studios }
+
+  //   const studios = await knex('studios').select().table('games')
+  //   console.log("🚀 ~ app.get ~ studios:", studios)
+
+    
+    
+  // })
+
+  //pega todos os studios e seus jogos é essencial para continuar o desafio de api restfull
+  app.get('/', async () => {
+    try {
+      const studios = await knex('studios').select('id as studioId', 'name as studioName');
+      const games = await knex('games').select();
+
+      const studiosWithGames = studios.map(studio => {
+        return {
+          ...studio,
+          games: games.filter(game => game.studio_id === studio.studioId)
+        };
+      });
+
+      return { studios: studiosWithGames };
+    } catch (error) {
+      console.error('Erro ao buscar estúdios com jogos:', error);
+      return { error: 'Erro ao buscar estúdios com jogos' };
+    }
+  });
+
 
   app.get('/:id', async (req) => {
     const createStudioParamsSchema = z.object({
@@ -41,6 +68,8 @@ export async function studioRoutes(app: FastifyInstance) {
 
     return { games }
   })
+
+  app.get('/:id/games', async () => {})
 
   app.post('/:id/games', async (req, res) => {
     const createStudioParamsSchema = z.object({
