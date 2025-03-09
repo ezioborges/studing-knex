@@ -10,6 +10,17 @@ export async function studioRoutes(app: FastifyInstance) {
     return { studios }
   })
 
+  app.get('/:id', async (req) => {
+    const createStudioParamsSchema = z.object({
+      id: z.string()
+    })
+    const { id } = createStudioParamsSchema.parse(req.params)
+    
+    const user = await knex('studios').where('id', id).select()
+
+    return user 
+  })
+
   app.post('/', async (req, res) => {
     const createStudioBodySchema = z.object({
       name: z.string(),
@@ -22,6 +33,33 @@ export async function studioRoutes(app: FastifyInstance) {
       name,
     })
 
-    return res.status(201).send
+    return res.status(201).send()
+  })
+
+  app.get('/games', async () => {
+    const games = await knex('games').select()
+
+    return { games }
+  })
+
+  app.post('/:id/games', async (req, res) => {
+    const createStudioParamsSchema = z.object({
+      id: z.string()
+    })
+
+    const createGameBodySchema = z.object({
+      title: z.string()
+    })
+
+    const { id } = createStudioParamsSchema.parse(req.params)
+    const { title } = createGameBodySchema.parse(req.body)
+    
+    await knex('games').insert({
+      id: randomUUID(),
+      title,
+      studio_id: id,
+    })
+    
+    return res.status(201).send()
   })
 }
